@@ -1,0 +1,3 @@
+FROM caddy:2.10-alpine
+ARG CADDY_CONFIG=deploy/Caddyfile
+COPY --chmod=644 ${CADDY_CONFIG} /etc/caddy/Caddyfile

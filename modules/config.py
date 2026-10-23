@@ -31,7 +31,7 @@ SCRIPT_DIR = main_file.parent
 
 ENV_FILE = os.getenv("ENV_FILE") or str(SCRIPT_DIR / f"{SCRIPT_NAME}.env")
 
-OWNER_ID = "5601279587"  # ID TELEGRAM OWNER
+OWNER_ID = "REDACTED_LEGACY_ID"  # ID TELEGRAM OWNER
 
 def _clean(s: str) -> str:
     return (s or "").strip().strip('"').strip("'")

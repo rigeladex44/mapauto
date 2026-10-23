@@ -1,3 +1,7 @@
+# Legacy runtime is intentionally disabled; importing is not a supported API.
+if __name__ == "__main__":
+    raise SystemExit("Legacy bot retired. See docs/DEPLOYMENT.md for the web application.")
+
 import os
 import sys
 import time
@@ -11,21 +15,7 @@ import ssl
 import urllib3
 from pathlib import Path
 
-# --- BYPASS SSL GLOBALLY UNTUK VPS LAMA ---
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-original_request = requests.Session.request
-def request_patch(self, method, url, **kwargs):
-    kwargs['verify'] = False
-    return original_request(self, method, url, **kwargs)
-requests.Session.request = request_patch
-# ------------------------------------------
+# Legacy entrypoint retired: use the authenticated web application.
 
 # Import our custom modules
 from modules.config import BOT_TOKEN, OWNER_ID, SCRIPT_NAME, SCRIPT_DIR, QRIS_FILE, BOT_NAME
@@ -86,8 +76,8 @@ def bot_polling_loop():
                         if accounts_list:
                             inline_buttons = [
                                 [
-                                    {"text": "WhatsApp", "url": "https://wa.me/6285155058577?Hallo%20*ADEX%IDN*!!!%0ABot%20Telegram%20Premium."}, 
-                                    {"text": "Telegram", "url": "https://t.me/mhengkyy"}
+                                    {"text": "WhatsApp", "url": "https://wa.me/REDACTED_LEGACY_ID?Hallo%20*SUPPORT*!!!%0ABot%20Telegram%20Premium."}, 
+                                    {"text": "Telegram", "url": "https://t.me/"}
                                 ]
                             ]
                             for name, _ in accounts_list:
@@ -150,7 +140,7 @@ def bot_polling_loop():
                     elif callback_data == "admin_add_duration":
                         if callback_chat_id == OWNER_ID:
                             session.waiting_add_duration = True
-                            tg_send("➕ Kirim ID User dan Durasi (Hari).\nContoh: `123456789 30`\n\nKetik 'CANCEL' untuk batal.", chat_id=OWNER_ID)
+                            tg_send("➕ Kirim ID User dan Durasi (Hari).\nContoh: `REDACTED_LEGACY_ID 30`\n\nKetik 'CANCEL' untuk batal.", chat_id=OWNER_ID)
                     elif callback_data == "admin_clear_terminal":
                         if callback_chat_id == OWNER_ID:
                             clear_terminal_and_logs()
@@ -359,11 +349,11 @@ def bot_polling_loop():
                             is_valid, dur_msg = check_user_duration(target_user_id)
                             tg_send(f"✅ Durasi Anda telah diperpanjang oleh Admin!\n\n{dur_msg}", chat_id=target_user_id)
                         except ValueError:
-                            tg_send("❌ Format salah. Harusnya angka semua.\nContoh: `123456789 30`", chat_id=OWNER_ID)
+                            tg_send("❌ Format salah. Harusnya angka semua.\nContoh: `REDACTED_LEGACY_ID 30`", chat_id=OWNER_ID)
                         except Exception as e:
                             tg_send(f"❌ Error: {e}", chat_id=OWNER_ID)
                     else:
-                        tg_send("❌ Format salah. Kirim: ID HARI\nContoh: `123456789 30`", chat_id=OWNER_ID)
+                        tg_send("❌ Format salah. Kirim: ID HARI\nContoh: `REDACTED_LEGACY_ID 30`", chat_id=OWNER_ID)
                     continue
 
                 if chat_id == OWNER_ID and text_raw.strip() == "👑 ADMIN PANEL":
@@ -620,8 +610,8 @@ def bot_polling_loop():
                         
                         inline_buttons = [
                             [
-                                {"text": "WhatsApp", "url": "https://wa.me/6285155058577?Hallo%20*ADEX%IDN*!!!%0ABot%20Telegram%20Premium."}, 
-                                {"text": "Telegram", "url": "https://t.me/mhengkyy"}
+                                {"text": "WhatsApp", "url": "https://wa.me/REDACTED_LEGACY_ID?Hallo%20*SUPPORT*!!!%0ABot%20Telegram%20Premium."}, 
+                                {"text": "Telegram", "url": "https://t.me/"}
                             ],
                             [
                                 {"text": "👤 PILIH AKUN", "callback_data": "show_accounts_list"}

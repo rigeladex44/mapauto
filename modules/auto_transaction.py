@@ -125,27 +125,8 @@ def get_next_nik(account_name: str, user_dir: Path, state: dict) -> str | None:
 
 def _push_stok_to_github(results: list):
     """Simpan hasil scan ke webapp/data.json lalu push ke GitHub (background)."""
-    try:
-        webapp_dir = SCRIPT_DIR / "webapp"
-        data_file = webapp_dir / "data.json"
-        payload = [{"name": n, "stok": s} for n, _, _, s in results]
-        data_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        # Push ke GitHub Pages
-        subprocess.run(
-            ["git", "-C", str(webapp_dir.parent), "add", "webapp/data.json"],
-            capture_output=True, timeout=10
-        )
-        subprocess.run(
-            ["git", "-C", str(webapp_dir.parent), "commit", "-m", "📊 Update stok dashboard", "--allow-empty"],
-            capture_output=True, timeout=10
-        )
-        subprocess.run(
-            ["git", "-C", str(webapp_dir.parent), "push", "origin", "main"],
-            capture_output=True, timeout=30
-        )
-        logging.info("[Dashboard] data.json berhasil di-push ke GitHub")
-    except Exception as e:
-        logging.warning(f"[Dashboard] Gagal push data.json: {e}")
+    raise RuntimeError("Public stock publishing retired; use the authenticated API")
+
 
 # ─────────────────────────────────────────────────────────
 #  Scan Stok — Live Edit Single Message Card (Battery 0-100%)

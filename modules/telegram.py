@@ -244,8 +244,8 @@ def send_welcome_banner(chat_id: str, user_info: dict, dur_msg: str, is_valid: b
     
     inline_buttons = [
         [
-            {"text": "WhatsApp", "url": "https://wa.me/6285155058577?Hallo%20*ADEX%IDN*!!!%0ABot%20Telegram%20Premium."}, 
-            {"text": "Telegram", "url": "https://t.me/mhengkyy"}
+            {"text": "WhatsApp", "url": "https://wa.me/REDACTED_LEGACY_ID?Hallo%20*SUPPORT*!!!%0ABot%20Telegram%20Premium."}, 
+            {"text": "Telegram", "url": "https://t.me/"}
         ]
     ]
 
