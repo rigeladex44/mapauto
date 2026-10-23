@@ -108,9 +108,10 @@ services:
     cpus: 0.5
     healthcheck:
       test: [CMD, python, -m, backend.app.health, api]
-      interval: 20s
-      timeout: 10s
+      interval: 30s
+      timeout: 30s
       retries: 5
+      start_period: 60s
   worker:
     build: {context: ., dockerfile: deploy/Dockerfile.worker}
     image: mapauto-worker:local
