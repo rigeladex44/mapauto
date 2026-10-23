@@ -1,3 +1,7 @@
+# Legacy merchant automation is excluded from the web migration.
+if __name__ == "__main__":
+    raise SystemExit("Legacy automation retired. Use authorized web integrations only.")
+
 import os
 import sys
 import time

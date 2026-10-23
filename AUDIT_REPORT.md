@@ -20,3 +20,9 @@ Tanggal: 23 Oktober 2026. Scope: seluruh file tracked dan satu commit reachable 
 Fitur legacy diidentifikasi dari implementasi, bukan diverifikasi dengan transaksi nyata. Logika murni yang layak dipertahankan: ekstensi expiry dari max(now, expiry), filter jenis pelanggan, agregasi/sort stok, status antrean dan ringkasan. Tidak mengimpor modul Telegram karena efek samping konfigurasi dan coupling. Laporan testing web ditulis terpisah setelah implementasi. `.gitignore` tidak menghapus history; tidak ada force push atau rewrite remote dilakukan.
 
 Jalankan `python scripts/security_audit.py` untuk laporan JSON teredaksi (path/kategori/jumlah saja); simpan laporan rinci di luar repo. Jangan memakai git diff atas file sensitif yang dihapus dari index saat merekam output.
+
+## Remediasi pada branch fitur
+
+52 jalur runtime/cache dihapus dari index (salinan lokal tetap), ditambah dua aset legacy pembayaran/branding yang dikarantina untuk review privasi. Identifier/contact default pada teks legacy disamarkan. Legacy bot dan semiauto entrypoint dihentikan; bypass SSL global dihapus, installer yang menonaktifkan verifikasi diganti panduan migrasi, dan fungsi publikasi stok ke GitHub dihentikan. Implementasi CAPTCHA lama disimpan hanya sebagai arsip kode; tidak diimpor aplikasi atau dimasukkan image. Kode bisnis murni dipisahkan di backend/app/domain.py, bukan menjalankan handler Telegram.
+
+History masih mengandung secret dari commit awal; commit remediasi tidak menghilangkannya. Rotasi, review binary/aset, rewrite Git history, fork/Pages/cache cleanup dan persetujuan pemilik tetap diperlukan. Tidak ada push, force push, pemusnahan salinan lokal, ataupun perubahan transaksi production.

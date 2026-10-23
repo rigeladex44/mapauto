@@ -48,8 +48,8 @@ Untuk menjalankan bot:
 Buka file **`BOT1_CAPTCHA.env`** menggunakan Notepad.
 
 ```env
-BOT_TOKEN=123456789:AAEOxxxxx...  <-- Token dari @BotFather
-ALLOWED_CHAT_ID=5601279587
+BOT_TOKEN=REDACTED_LEGACY_ID:AAEOxxxxx...  <-- Token dari @BotFather
+ALLOWED_CHAT_ID=REDACTED_LEGACY_ID
 HEADLESS=1
 FILTER_JENIS_PELANGGAN=RUMAH TANGGA,USAHA MIKRO
 ```
@@ -96,13 +96,13 @@ Bot memiliki sistem proteksi ketat.
 
 4.  **🚫 USER BARU (Belum Terdaftar)**
     *   Tidak bisa akses apapun.
-    *   Bot akan respon: *"Silahkan Hubungi @mhengkyy"*.
+    *   Bot akan respon: *"Silahkan Hubungi [legacy contact removed]"*.
     *   Owner akan dapat notifikasi di Telegram.
 
 ### Cara Owner Tambah User
 Kirim command:
 `/add_duration [USER_ID] [HARI]`
-Contoh: `/add_duration 123456789 30`
+Contoh: `/add_duration REDACTED_LEGACY_ID 30`
 
 ---
 
