@@ -1,15 +1,25 @@
 import argparse, getpass, time
 from sqlalchemy import select
 from .db import SessionLocal
-from .models import User, Merchant, Audit
+from .models import User, Merchant, Audit, Tenant
 from .security import hash_password
 from .config import settings
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('command',choices=['create-admin','seed-demo'])
+    parser.add_argument('--tenant-id',type=int,default=1)
+    parser.add_argument('--new-tenant',help='Create a separate tenant with this name (create-admin only)')
     args=parser.parse_args()
     with SessionLocal() as db:
+        if args.new_tenant:
+            if args.command!='create-admin': parser.error('New tenant requires create-admin')
+            tenant=Tenant(name=args.new_tenant);db.add(tenant);db.flush();tenant_id=tenant.id
+        else:
+            tenant=db.get(Tenant,args.tenant_id)
+            if not tenant: parser.error('Tenant not found; use --new-tenant')
+            tenant_id=tenant.id
+        db.info['tenant_id']=tenant_id
         if args.command=='create-admin':
             username=input('Username admin: ').strip().lower()
             import re

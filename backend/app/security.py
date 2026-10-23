@@ -2,7 +2,8 @@ import hashlib, secrets, time
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session as DB
 from .db import get_db
-from .models import User, Session
+from .models import User, Session, Tenant, MerchantGrant
+from sqlalchemy import select
 
 def hash_password(password):
     salt=secrets.token_hex(16)
@@ -27,6 +28,11 @@ def current_user(request: Request, db: DB = Depends(get_db)):
         raise HTTPException(401,'Sesi tidak aktif atau masa aktif berakhir')
     if request.method not in ('GET','HEAD','OPTIONS') and not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session.csrf):
         raise HTTPException(403,'CSRF token diperlukan')
+    tenant=db.get(Tenant,user.tenant_id)
+    if not tenant or not tenant.active: raise HTTPException(403,"Tenant nonaktif")
+    db.info["tenant_id"]=user.tenant_id
+    if user.role!='admin':
+        db.info['merchant_ids']=list(db.scalars(select(MerchantGrant.merchant_id).where(MerchantGrant.user_id==user.id)))
     request.state.session=session
     return user
 

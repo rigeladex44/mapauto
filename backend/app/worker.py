@@ -16,13 +16,13 @@ def tick(worker_id):
             w=Worker(id=worker_id,heartbeat=now,paused=False); db.add(w)
         else: w.heartbeat=now
         # Do not silently replay a transaction after losing a worker.
-        for j in db.scalars(select(Job).where(Job.status=='running')):
+        for j in db.scalars(select(Job).where(Job.status=='running',Job.batch_id.is_(None))):
             previous=db.get(Worker,j.worker_id) if j.worker_id else None
             if not previous or now-previous.heartbeat>60:
                 j.status='failed'; j.result='Worker terputus; tinjau sebelum menjadwalkan ulang'; j.updated_at=now
         db.commit()
         # Finish only work owned by this worker; lock against cancellation.
-        for j in db.scalars(select(Job).where(Job.status=='running',Job.worker_id==worker_id).with_for_update()):
+        for j in db.scalars(select(Job).where(Job.status=='running',Job.worker_id==worker_id,Job.batch_id.is_(None)).with_for_update()):
             if now-j.updated_at<2: continue
             merchant=db.scalar(select(Merchant).where(Merchant.id==j.merchant_id).with_for_update())
             creator=db.get(User,j.created_by)
@@ -41,13 +41,13 @@ def tick(worker_id):
                 merchant.stock-=j.quantity; merchant.stock_at=now
                 j.status='succeeded'; j.result='SIMULASI: pencatatan lokal; bukan transaksi merchant'
             j.updated_at=now
-            db.add(Audit(actor_id=None,action='job.'+j.status,target=str(j.id)))
-            s=db.get(SystemSetting,'notifications')
-            if s and s.value.get('enabled'): db.add(Notification(job_id=j.id))
+            db.add(Audit(tenant_id=j.tenant_id,actor_id=None,action='job.'+j.status,target=str(j.id)))
+            s=db.get(SystemSetting,(j.tenant_id,'notifications'))
+            if s and s.value.get('enabled'): db.add(Notification(job_id=j.id,tenant_id=j.tenant_id))
         db.commit()
         if w.paused: return
         # Conditional UPDATE works on SQLite and PostgreSQL; only one claimant wins.
-        candidate=db.scalar(select(Job.id).where(Job.status=='queued').order_by(Job.id).limit(1))
+        candidate=db.scalar(select(Job.id).where(Job.status=='queued',Job.batch_id.is_(None)).order_by(Job.id).limit(1))
         if candidate is not None:
             db.execute(update(Job).where(Job.id==candidate,Job.status=='queued').values(status='running',worker_id=worker_id,updated_at=now))
             db.commit()
@@ -56,10 +56,10 @@ def notify():
     cfg=settings()
     if not (cfg.telegram_enabled and cfg.telegram_bot_token and cfg.telegram_chat_id): return
     with SessionLocal() as db:
-        s=db.get(SystemSetting,'notifications')
-        if not s or not s.value.get('enabled'): return
         n=db.scalar(select(Notification).where(Notification.status=='pending').with_for_update(skip_locked=True).limit(1))
         if not n: return
+        s=db.get(SystemSetting,(n.tenant_id,'notifications'))
+        if not s or not s.value.get('enabled'): return
         n.status='sending'; db.commit()
         # At-most-once notification attempt: a crash may require manual review.
         try:
