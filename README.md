@@ -8,6 +8,7 @@ Workspace PWA untuk manajemen merchant, pengguna dan masa aktif, stok, job/worke
 - [Instalasi lokal dan deployment](docs/DEPLOYMENT.md)
 - [Hasil pengujian dan batas fitur](docs/TEST_REPORT.md)
 - [Arsitektur VPS](ARCHITECTURE.md)
+- [Peta alur bot utama dan webapp](FLOW_MAP.md)
 - [Deployment VPS Ubuntu](DEPLOYMENT_VPS.md)
 - [Checklist keamanan](SECURITY_CHECKLIST.md)
 
