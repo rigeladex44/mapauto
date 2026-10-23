@@ -29,3 +29,4 @@ test-results/
 # Legacy payment/branding images retained locally pending privacy review.
 /QRIS.png
 /banner.png
+!backend/requirements.lock
