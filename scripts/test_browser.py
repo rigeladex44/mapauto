@@ -2,12 +2,13 @@
 import os, subprocess, tempfile, secrets, time, urllib.request, json
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
+from cryptography.fernet import Fernet
 root=Path(__file__).resolve().parents[1]
 python=os.environ.get('BACKEND_PYTHON',str(root/'.venv/bin/python'))
 password=secrets.token_urlsafe(20)
 viewer_password=secrets.token_urlsafe(20)
 with tempfile.TemporaryDirectory(prefix='mapauto-e2e-') as temp:
-    env={**os.environ,'DATABASE_URL':'sqlite:///'+temp+'/test.db','DEMO_MODE':'true','APP_ENV':'development','TELEGRAM_ENABLED':'false','COOKIE_SECURE':'false','E2E_PASSWORD':password,'ALLOWED_HOSTS':'localhost,127.0.0.1,testserver'}
+    env={**os.environ,'DATABASE_URL':'sqlite:///'+temp+'/test.db','DEMO_MODE':'true','APP_ENV':'development','TELEGRAM_ENABLED':'false','COOKIE_SECURE':'false','E2E_PASSWORD':password,'ALLOWED_HOSTS':'localhost,127.0.0.1,testserver','DATA_ENCRYPTION_KEY':Fernet.generate_key().decode(),'NIK_HASH_KEY':secrets.token_hex(32)}
     subprocess.run([python,'-m','alembic','-c','backend/alembic.ini','upgrade','head'],cwd=root,env=env,check=True)
     subprocess.run([python,'-c',"import os; from backend.app.db import SessionLocal; from backend.app.models import User; from backend.app.security import hash_password; db=SessionLocal(); db.add(User(username='e2e-admin',password_hash=hash_password(os.environ['E2E_PASSWORD']),role='admin')); db.commit()"],cwd=root,env=env,check=True)
     server=subprocess.Popen([python,'-m','uvicorn','backend.app.main:app','--host','127.0.0.1','--port','8011','--no-access-log'],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
@@ -39,6 +40,15 @@ with tempfile.TemporaryDirectory(prefix='mapauto-e2e-') as temp:
             page.get_by_role('navigation').get_by_role('button',name='Transaksi',exact=True).click()
             page.get_by_role('button',name='Simulasi transaksi').click();dialog.get_by_label('Jumlah tabung').fill('2');dialog.get_by_role('button',name='Simpan',exact=True).click()
             expect(page.get_by_text('SIMULASI: pencatatan lokal; bukan transaksi merchant',exact=True)).to_be_visible(timeout=15000)
+            page.get_by_role('navigation').get_by_role('button',name='Batch NIK',exact=True).click()
+            page.get_by_label('NIK sintetis, satu per baris').fill('0000000000000001\n0000000000000001')
+            page.get_by_label('Saya memakai data sintetis untuk simulasi.').check()
+            page.get_by_role('button',name='Validasi & preview').click()
+            expect(page.get_by_text('1 NIK unik')).to_be_visible()
+            page.get_by_role('button',name='Konfirmasi antrean').click()
+            page.get_by_role('button',name='Batalkan batch').click()
+            page.get_by_role('navigation').get_by_role('button',name='Verifikasi',exact=True).click()
+            expect(page.get_by_text('Tidak ada verifikasi yang menunggu. Checkpoint baru akan muncul otomatis.')).to_be_visible()
             page.get_by_role('navigation').get_by_role('button',name='Worker',exact=True).click()
             page.get_by_role('button',name='Jeda',exact=True).click();expect(page.get_by_role('button',name='Lanjutkan',exact=True)).to_be_visible()
             # Queued work stays cancellable while the worker is paused.
@@ -78,7 +88,7 @@ with tempfile.TemporaryDirectory(prefix='mapauto-e2e-') as temp:
             expect(page.get_by_role('button',name='Masuk ke workspace')).to_be_visible()
             assert not errors, f'Browser runtime errors: {len(errors)}'
             browser.close()
-        print('PASS browser: login, merchant/filter, stock, transaction, worker pause/resume, cancel, user/expiry, CSV, settings, PWA privacy, mobile layout and modal; zero runtime errors')
+        print('PASS browser: login, merchant/filter, stock, transaction, batch preview/confirm/cancel, worker pause/resume, user/expiry, CSV, settings, PWA privacy, mobile layout and modal; zero runtime errors')
     finally:
         for process in [worker,server]:
             process.terminate()
