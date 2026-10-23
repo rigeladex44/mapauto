@@ -23,6 +23,8 @@ Jalankan `python scripts/security_audit.py` untuk laporan JSON teredaksi (path/k
 
 ## Remediasi pada branch fitur
 
+Pada branch VPS, audit statis ulang terhadap tree kerja dan history tetap hanya menyimpan kategori/jumlah temuan di luar repo; tidak ada nilai rahasia dicetak. Temuan history lama tetap berlaku. Migrasi baru menambahkan tenant boundary, grant merchant, enkripsi NIK, audit checkpoint, worker browser terisolasi, Redis queue dan batas production yang menolak adapter live. Image dan Compose hanya menyalin source web/backend baru, bukan data legacy. File `.env` dibuat lokal mode 0600 dan diabaikan Git. Pembersihan history belum dilakukan karena memerlukan rotasi serta persetujuan force push.
+
 52 jalur runtime/cache dihapus dari index (salinan lokal tetap), ditambah dua aset legacy pembayaran/branding yang dikarantina untuk review privasi. Identifier/contact default pada teks legacy disamarkan. Legacy bot dan semiauto entrypoint dihentikan; bypass SSL global dihapus, installer yang menonaktifkan verifikasi diganti panduan migrasi, dan fungsi publikasi stok ke GitHub dihentikan. Implementasi CAPTCHA lama disimpan hanya sebagai arsip kode; tidak diimpor aplikasi atau dimasukkan image. Kode bisnis murni dipisahkan di backend/app/domain.py, bukan menjalankan handler Telegram.
 
 History masih mengandung secret dari commit awal; commit remediasi tidak menghilangkannya. Rotasi, review binary/aset, rewrite Git history, fork/Pages/cache cleanup dan persetujuan pemilik tetap diperlukan. Tidak ada push, force push, pemusnahan salinan lokal, ataupun perubahan transaksi production.

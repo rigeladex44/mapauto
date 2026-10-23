@@ -1,0 +1,155 @@
+name: mapauto-vps
+x-app-env: &app-env
+  NO_PROXY: api,frontend,db,redis,mock-merchant,localhost,127.0.0.1
+  no_proxy: api,frontend,db,redis,mock-merchant,localhost,127.0.0.1
+  APP_ENV: production
+  DATABASE_URL: ${DATABASE_URL:?Configure PostgreSQL DATABASE_URL}
+  REDIS_URL: ${REDIS_URL:?Configure authenticated REDIS_URL}
+  DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Generate a Fernet key}
+  NIK_HASH_KEY: ${NIK_HASH_KEY:?Generate a separate random key}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Set domain plus localhost}
+  COOKIE_SECURE: 'true'
+  DEMO_MODE: 'false'
+  WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-1}
+  MAX_BROWSER_CONTEXTS: ${MAX_BROWSER_CONTEXTS:-1}
+  CHROMIUM_SANDBOX: 'true'
+  MOCK_MERCHANT_URL: http://mock-merchant:8099
+x-hardening: &hardening
+  init: true
+  read_only: true
+  tmpfs: ['/tmp:size=256m,mode=1777']
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+services:
+  proxy:
+    build: {context: ., dockerfile: deploy/Dockerfile.proxy}
+    image: mapauto-proxy:local
+    ports: ['80:80','443:443','443:443/udp']
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set public domain}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME contact}
+      NO_PROXY: api,frontend,db,redis,mock-merchant,localhost,127.0.0.1
+      no_proxy: api,frontend,db,redis,mock-merchant,localhost,127.0.0.1
+    volumes: [caddy_data:/data,caddy_config:/config]
+    networks:
+      edge: {ipv4_address: 172.29.0.10}
+    restart: unless-stopped
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.25
+  frontend:
+    build: {context: ., dockerfile: deploy/Dockerfile.frontend}
+    image: mapauto-frontend:local
+    environment:
+      NO_PROXY: localhost,127.0.0.1
+      no_proxy: localhost,127.0.0.1
+    <<: *hardening
+    networks: [edge]
+    mem_limit: 128m
+    cpus: 0.25
+    healthcheck:
+      test: [CMD, env, -u, HTTP_PROXY, -u, http_proxy, -u, HTTPS_PROXY, -u, https_proxy, wget, -q, -O, /dev/null, 'http://127.0.0.1:8080/']
+      interval: 20s
+      timeout: 3s
+      retries: 3
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: mapauto
+      POSTGRES_DB: mapauto
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set database password}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U mapauto -d mapauto']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set Redis password}
+    # Password stays in environment, not a build layer or command argument value.
+    command: [sh, -ec, 'printf "requirepass %s\nappendonly yes\nappendfsync everysec\n" "$$REDIS_PASSWORD" > /tmp/redis.conf; exec redis-server /tmp/redis.conf']
+    volumes: [redisdata:/data]
+    tmpfs: ['/tmp:mode=1777']
+    networks: [data]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 192m
+    cpus: 0.25
+  migrate:
+    build: {context: ., dockerfile: deploy/Dockerfile.backend}
+    image: mapauto-backend:local
+    environment: *app-env
+    networks: [data]
+    depends_on:
+      db: {condition: service_healthy}
+    command: [alembic, -c, backend/alembic.ini, upgrade, head]
+  api:
+    image: mapauto-backend:local
+    environment: *app-env
+    <<: *hardening
+    networks: [edge,data]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    mem_limit: 384m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD, python, -m, backend.app.health, api]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+  worker:
+    build: {context: ., dockerfile: deploy/Dockerfile.worker}
+    image: mapauto-worker:local
+    environment: *app-env
+    <<: *hardening
+    cap_add: [SYS_CHROOT]
+    networks: [data,browser]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    shm_size: 256m
+    tmpfs: ['/tmp:size=512m,mode=1777','/home/mapauto/.cache:size=32m,uid=10001,gid=10001']
+    # Chromium sandbox needs user namespaces. Do not set privileged or publish CDP/VNC.
+    security_opt: [no-new-privileges:true, 'seccomp=./deploy/chromium-seccomp.json']
+    mem_limit: ${WORKER_MEMORY:-1536m}
+    cpus: ${WORKER_CPUS:-1.0}
+    stop_grace_period: 30s
+    healthcheck:
+      test: [CMD, python, -m, backend.app.health, worker]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  mock-merchant:
+    image: mapauto-backend:local
+    profiles: [demo]
+    environment:
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL}
+    command: [uvicorn, backend.app.mock_merchant:app, --host, 0.0.0.0, --port, '8099', --no-access-log]
+    <<: *hardening
+    networks: [data,browser]
+    mem_limit: 128m
+    cpus: 0.25
+networks:
+  edge:
+    ipam: {config: [{subnet: 172.29.0.0/24}]}
+  data: {internal: true}
+  browser: {internal: true}
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:

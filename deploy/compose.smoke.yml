@@ -1,0 +1,9 @@
+# Loopback-only synthetic deployment smoke test. Never expose this override publicly.
+services:
+  proxy:
+    ports: !override ['127.0.0.1:18080:80']
+    build: {args: {CADDY_CONFIG: deploy/Caddyfile.smoke}}
+  api:
+    environment: {ALLOWED_HOSTS: 'localhost,127.0.0.1', COOKIE_SECURE: 'false'}
+  worker:
+    environment: {CHROMIUM_SANDBOX: 'true'}

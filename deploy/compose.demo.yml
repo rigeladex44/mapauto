@@ -1,0 +1,7 @@
+services:
+  migrate:
+    environment: {APP_ENV: development, DEMO_MODE: 'true'}
+  api:
+    environment: {APP_ENV: development, DEMO_MODE: 'true'}
+  worker:
+    environment: {APP_ENV: development, DEMO_MODE: 'true'}

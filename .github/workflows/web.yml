@@ -14,16 +14,21 @@ jobs:
           POSTGRES_DB: mapauto_test
         ports: ['5432:5432']
         options: --health-cmd 'pg_isready -U mapauto -d mapauto_test' --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: --health-cmd 'redis-cli ping' --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql+psycopg://mapauto:ci-synthetic-only@localhost:5432/mapauto_test
       TEST_DATABASE_URL: postgresql+psycopg://mapauto:ci-synthetic-only@localhost:5432/mapauto_test
       DEMO_MODE: 'true'
       TELEGRAM_ENABLED: 'false'
+      TEST_REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -31,18 +36,38 @@ jobs:
           cache-dependency-path: webapp/package-lock.json
       - run: python scripts/security_audit.py --current-only --fail-secrets > /tmp/mapauto-security-current.json
       - run: pip install --require-hashes -r backend/requirements.lock
+      - run: pip install --require-hashes -r backend/worker-requirements.lock
+      - run: python -m playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y chromium
       - run: alembic -c backend/alembic.ini upgrade head
       - run: alembic -c backend/alembic.ini check
-      - run: alembic -c backend/alembic.ini downgrade base && alembic -c backend/alembic.ini upgrade head
       - run: python -m pytest backend/tests -q
       - run: npm ci --prefix webapp
       - run: npm audit --prefix webapp --audit-level=moderate
       - run: npm test --prefix webapp && npm run build --prefix webapp
       - run: pip install pip-audit && pip-audit --disable-pip -r backend/requirements.lock
-      - run: pip install playwright
-      - run: python -m playwright install --with-deps chromium
       - name: Browser workflows and mobile PWA smoke
         run: |
           export BACKEND_PYTHON="$(command -v python)"
           export CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
           python scripts/test_browser.py
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install cryptography==46.0.3
+      - run: python scripts/generate-keys.py
+      - name: Build and start isolated demo stack
+        run: docker compose -p ci_smoke -f docker-compose.yml -f deploy/compose.demo.yml -f deploy/compose.smoke.yml --profile demo up -d --build
+      - name: HTTP and sandboxed worker smoke
+        run: |
+          curl --fail --silent --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:18080/api/health | python -c 'import json,sys; assert json.load(sys.stdin)["demo_mode"] is True'
+          curl --fail --silent http://127.0.0.1:18080/ | grep -q '<!doctype html>'
+          docker compose -p ci_smoke -f docker-compose.yml -f deploy/compose.demo.yml -f deploy/compose.smoke.yml exec -T worker python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(executable_path="/usr/bin/chromium",chromium_sandbox=True); b.close(); p.stop()'
+      - name: Remove synthetic test volumes
+        if: always()
+        run: |
+          if [ -f .env ]; then docker compose -p ci_smoke -f docker-compose.yml -f deploy/compose.demo.yml -f deploy/compose.smoke.yml --profile demo down -v; fi

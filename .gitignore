@@ -30,3 +30,6 @@ test-results/
 /QRIS.png
 /banner.png
 !backend/requirements.lock
+
+!backend/worker-requirements.lock
+backups/

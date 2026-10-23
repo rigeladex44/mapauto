@@ -17,3 +17,9 @@
 !webapp/src/**
 !webapp/public/
 !webapp/public/**
+
+!deploy/
+!deploy/**
+!backend/worker-requirements.lock
+**/__pycache__/
+**/*.pyc
