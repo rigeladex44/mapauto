@@ -5,10 +5,7 @@
 !*.env.example
 user_data/
 durations.json
-semiauto/akun.txt
-semiauto/nik.txt
-semiauto/cookies/
-semiauto/riwayat/
+semiauto/
 webapp/data.json
 __pycache__/
 *.py[cod]

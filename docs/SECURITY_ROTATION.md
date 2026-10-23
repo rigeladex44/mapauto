@@ -8,6 +8,8 @@ Anggap seluruh secret yang pernah committed telah bocor, walaupun repo private. 
 4. Batasi akses salinan repo, artefak, Pages, log dan backup. Hapus data.json publik melalui perubahan terencana. Tentukan kewajiban retensi/pemberitahuan privasi untuk NIK, akun, chat ID dan aset gambar. Jangan otomatis mengimpor data pribadi legacy.
 5. Salinan lokal sensitive yang telah di-untrack tetap ada. Simpan hanya backup terenkripsi yang aksesnya terbatas; jangan menyalinnya ke image Docker. Hapus lokal hanya setelah pemilik menyetujui retensi/pemusnahan.
 
+Jalur `semiauto/` sudah dihapus dari checkout saat ini. Jalur itu tetap tercantum di bawah karena commit lama masih menyimpannya; penghapusan checkout tidak membersihkan history, fork, atau cache.
+
 ## Rewrite history (BELUM DIJALANKAN)
 
 Rewrite mengubah SHA seluruh descendant dan tidak membatalkan secret. Rotasi dahulu. Butuh persetujuan eksplisit, jendela maintenance, daftar branch/tag/fork, backup terenkripsi terverifikasi dan koordinasi kolaborator. Jangan menjalankan pada working checkout berisi data.
