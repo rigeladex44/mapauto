@@ -25,7 +25,7 @@
 ## Belum diverifikasi / perlu tindakan
 
 - Credential lama harus dirotasi; history lama, fork/Pages/cache dan salinan luar masih dapat memuat data sensitif. Scanner pola bukan audit forensik lengkap. Tidak ada rewrite/force push dilakukan.
-- Tidak tersedia adapter merchant resmi atau izin API: semua permintaan live ditolak. Stok/transaksi asli, account credential vault, OTP/CAPTCHA dan limit production tidak dimigrasikan atau diuji.
+- Adapter Playwright saat ini hanya terhubung ke merchant mock; alur UI Merchant MyPertamina live belum dipetakan atau diuji dengan akun berizin. Semua permintaan live ditolak. Stok/transaksi asli, penyimpanan credential aman, verifikasi manual OTP/CAPTCHA dan batas production belum diuji.
 - Telegram hanya diuji dengan transport mock; tidak ada pesan nyata dikirim. Pengiriman nyata perlu secret baru, opt-in environment dan admin, serta pengujian terotorisasi.
 - Instalasi iPhone/Android fisik, Safari iOS, audit aksesibilitas menyeluruh, load/penetration test, disaster recovery, HTTPS/reverse proxy, secret manager dan rate limiting IP belum diuji.
 - CI workflow disiapkan; eksekusi pada GitHub Actions belum terjadi karena tidak ada push.

@@ -2,7 +2,7 @@
 
 - [ ] Rotasi seluruh token, PIN/password merchant, cookie, sesi, dan akses Git yang pernah ada di history; validasi revoke bersama pemilik.
 - [ ] Review semua branch, tag, fork, Pages, aset binary, backup, dan cached GitHub view; rencanakan rewrite history terpisah. **Jangan force push tanpa persetujuan eksplisit.** Lihat [rotasi](docs/SECURITY_ROTATION.md).
-- [ ] Konfirmasi izin tertulis dan kontrak metode Merchant MyPertamina sebelum mengaktifkan integrasi live. Mode production saat ini menolak transaksi.
+- [ ] Konfirmasi hak penggunaan akun merchant dan izin otomasi antarmuka melalui Playwright sebelum mengaktifkan integrasi live. Tinjau ketentuan layanan, alur login, CAPTCHA/OTP manual, dan batas transaksi. Mode production saat ini menolak transaksi.
 - [ ] Domain dan email ACME nyata; HTTPS valid, firewall hanya port 80/443/SSH, SSH berbasis key dan MFA admin hosting.
 - [ ] `.env` mode 0600 dengan kunci unik; batasi akses OS, backup terenkripsi dan salinan off-host. Simpan key lama untuk decrypt selama rotasi terencana.
 - [ ] Jalankan migrasi di staging dan restore backup ke database terisolasi sebelum update produksi.

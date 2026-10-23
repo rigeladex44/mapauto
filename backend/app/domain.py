@@ -18,6 +18,6 @@ def validate_filters(filters):
     return list(filters)
 
 class AuthorizedMerchantAdapter:
-    """Port reserved for an officially authorized integration. No fallback scraping."""
+    """Fail-closed port for an authorized Playwright UI workflow; no live flow is configured."""
     def execute(self, *args, **kwargs):
         raise ValueError('Live merchant integration is not configured or authorized')

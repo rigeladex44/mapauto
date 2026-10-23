@@ -42,7 +42,7 @@ def info(db,b):
 
 @router.post('/batches/preview',status_code=201)
 def preview(data:Preview,user=Depends(require('admin','operator')),db:DB=Depends(get_db)):
-    if not settings().demo_mode:raise HTTPException(409,'Batch live ditutup sampai adapter resmi diotorisasi. Gunakan data sintetis di Demo Mode')
+    if not settings().demo_mode:raise HTTPException(409,'Batch live ditutup sampai alur Playwright merchant berizin disetujui dan diuji. Gunakan data sintetis di Demo Mode')
     m=db.get(Merchant,data.merchant_id)
     if not m or not m.active or not m.authorized:raise HTTPException(404,'Merchant aktif berotorisasi tidak ditemukan')
     lines=[v.strip() for v in re.split(r'[\s,;]+',data.niks) if v.strip()]

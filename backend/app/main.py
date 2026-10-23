@@ -162,7 +162,7 @@ def jobs(user=Depends(current_user),db: DB=Depends(get_db)):
 
 @app.post('/api/jobs',status_code=201)
 def create_job(data:JobInput,user=Depends(require('admin','operator')),db: DB=Depends(get_db)):
-    if not data.simulated: raise HTTPException(409,'Integrasi merchant resmi belum dikonfigurasi; transaksi live ditolak')
+    if not data.simulated: raise HTTPException(409,'Alur Playwright merchant live belum dikonfigurasi; transaksi live ditolak')
     if not cfg.demo_mode: raise HTTPException(409,'Simulasi hanya tersedia dalam Demo Mode')
     m=db.get(Merchant,data.merchant_id)
     if not m or not m.active or not m.authorized: raise HTTPException(400,'Merchant harus aktif dan diotorisasi')
