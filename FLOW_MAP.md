@@ -30,7 +30,9 @@ flowchart TD
 
 Sumber utama: `BOT1_CAPTCHA.py` mengelola interaksi Telegram, akses/masa aktif dan pemanggilan pekerjaan; `modules/auto_transaction.py` memilih akun/NIK dan mengulang proses; `modules/pertamina.py` menangani sesi/login, pemeriksaan NIK, formulir, CAPTCHA dan hasil; `modules/stock.py` membaca stok; `modules/captcha.py` adalah solver slider otomatis. Bot lama menyimpan sebagian akun, cookie, antrean dan state pada file. Ini temuan keamanan, bukan pola penyimpanan yang akan dipertahankan.
 
-## 2. Webapp yang dituju
+## 2. Webapp yang dituju: ganti pintu masuk, pertahankan proses utama
+
+Maksud pemilik adalah mengganti antarmuka Telegram dengan Web App. Urutan bisnis pada worker Playwright lama tetap menjadi acuan: sesi/login merchant, cek stok, pilih NIK dan filter pelanggan, proses melalui UI merchant, pemeriksaan hasil, lalu progres/laporan. Pemindahan ke VPS memerlukan pemisahan panggilan Telegram dan state file dari fungsi worker, serta pengamanan sesi dan data; itu bukan penggantian proses merchant dengan API atau simulasi sebagai hasil akhir.
 
 ```mermaid
 flowchart TD
@@ -38,18 +40,18 @@ flowchart TD
   A --> B[Pilih merchant yang diizinkan]
   B --> C{Jenis pekerjaan}
   C --> D[Cek stok]
-  C --> E[Batch NIK: validasi, deduplikasi, preview]
+  C --> E[Input NIK: validasi, deduplikasi, preview]
   E --> F[Konfirmasi operator]
   D --> G[Antrean per merchant di PostgreSQL/Redis]
   F --> G
-  G --> H[Worker VPS mengunci merchant dan membuka konteks Chromium terisolasi]
-  H --> I[Login/sesi merchant lewat UI MyPertamina dengan akun berizin]
+  G --> H[Worker Playwright utama di VPS mengunci merchant dan membuka konteks Chromium terisolasi]
+  H --> I[Logika lama: sesi tersimpan atau login lewat UI merchant]
   I --> J{Pekerjaan}
   J --> K[Baca stok dari UI]
   J --> L[Validasi NIK, jenis pelanggan dan stok di UI]
-  L --> M[Isi dan konfirmasi transaksi nyata sesuai otorisasi]
+  L --> M[Logika lama: isi dan konfirmasi transaksi nyata sesuai otorisasi]
   M --> N{CAPTCHA/OTP diperlukan?}
-  N -- Ya --> O[Checkpoint verifikasi manual pada webapp saat ini]
+  N -- Ya --> O[Verifikasi: perilaku lama diaudit; fallback manual yang aman]
   O --> P[Periksa hasil di UI]
   N -- Tidak --> P
   K --> Q[Status, stok dan audit tersimpan]
@@ -60,7 +62,7 @@ flowchart TD
   V --> Q
 ```
 
-Browser, database, Redis dan worker berjalan di VPS; pengguna hanya memakai browser PWA. Satu merchant tidak berbagi browser context/cookie dengan merchant lain. Admin mengelola akses merchant, pengguna, masa aktif, worker dan pengaturan. Telegram menjadi notifikasi opsional, bukan pengendali pekerjaan.
+Browser, database, Redis dan worker berjalan di VPS; pengguna hanya memakai browser PWA. Satu merchant tidak berbagi browser context/cookie dengan merchant lain. Admin mengelola akses merchant, pengguna, masa aktif, worker dan pengaturan. Telegram menjadi notifikasi opsional, bukan pengendali pekerjaan. Perilaku CAPTCHA lama memang otomatis di kode, tetapi pengguna sebelumnya juga melarang bypass CAPTCHA dan meminta checkpoint manual. Migrasi bagian ini perlu dibatasi oleh izin penggunaan layanan dan pengujian terotorisasi; OTP tidak boleh diotomatisasi atau dilewati.
 
 ## 3. Status implementasi saat ini
 
@@ -71,7 +73,7 @@ Browser, database, Redis dan worker berjalan di VPS; pengguna hanya memakai brow
 | Worker Chromium terisolasi, job lock, checkpoint, rekonsiliasi | Ada dan diuji dengan merchant mock |
 | Pembacaan stok serta transaksi melalui UI MyPertamina live | **Belum terhubung**; worker saat ini hanya memakai merchant mock |
 | CAPTCHA slider otomatis | **Ada di bot lama** (`modules/captcha.py`), **belum ada di worker web** |
-| OTP/CAPTCHA pada webapp | Checkpoint manual pada implementasi sekarang; aturan final untuk CAPTCHA otomatis perlu diputuskan karena spesifikasi awal meminta checkpoint manual dan melarang solver baru |
+| OTP/CAPTCHA pada webapp | Worker demo saat ini memakai checkpoint manual; kode lama memiliki solver CAPTCHA otomatis, tetapi belum dipindahkan atau dinyatakan aman untuk layanan live |
 | Akun dan NIK asli | Belum dipakai atau diuji di webapp; batch live ditolak |
 
 Migrasi live perlu memvalidasi ulang urutan halaman dan hasil terhadap akun merchant yang benar-benar diotorisasi. Jangan menyalin cookie, PIN, atau NIK lama dari repository. Pengujian otomatis tetap menggunakan merchant mock dan data sintetis; transaksi yang statusnya tidak pasti harus direkonsiliasi sebelum pekerjaan lain pada merchant itu berjalan.
