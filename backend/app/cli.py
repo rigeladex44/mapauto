@@ -7,11 +7,15 @@ from .config import settings
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('command',choices=['create-admin','seed-demo'])
+    parser.add_argument('command',choices=['create-admin','seed-demo','admin-exists'])
     parser.add_argument('--tenant-id',type=int,default=1)
     parser.add_argument('--new-tenant',help='Create a separate tenant with this name (create-admin only)')
     args=parser.parse_args()
     with SessionLocal() as db:
+        if args.command=='admin-exists':
+            if db.scalar(select(User.id).where(User.role=='admin').limit(1)) is None:
+                raise SystemExit(1)
+            return
         if args.new_tenant:
             if args.command!='create-admin': parser.error('New tenant requires create-admin')
             tenant=Tenant(name=args.new_tenant);db.add(tenant);db.flush();tenant_id=tenant.id
