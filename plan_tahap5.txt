@@ -1,0 +1,124 @@
+====================================================================
+               PLAN TAHAP 5 — TELEGRAM WEB APP INTEGRATION
+                     (📱 DASHBOARD WEB DI DALAM CHAT)
+====================================================================
+
+Rencana integrasi tombol Web App di Telegram untuk melihat visual 
+dashboard stok, pengelolaan NIK, dan daftar akun langsung dari Telegram.
+
+--------------------------------------------------------------------
+1. APA ITU TELEGRAM WEB APP / MINI APP?
+--------------------------------------------------------------------
+Telegram Web App memungkinkan kita membuka aplikasi web interaktif 
+berbasis HTML/CSS/JS langsung di dalam aplikasi Telegram saat tombol 
+ditekan, tanpa perlu membuka browser eksternal seperti Chrome/Safari.
+
+--------------------------------------------------------------------
+2. CARA INTEGRASI TOMBOL WEB APP DI TELEGRAM BOT:
+--------------------------------------------------------------------
+Kita bisa menyematkan tombol Web App baik di Inline Keyboard maupun 
+Keyboard Utama (ReplyKeyboardMarkup).
+
+Format data tombol di Bot API:
+{
+    "text": "📱 DASHBOARD WEB",
+    "web_app": {
+        "url": "https://botmap-dashboard-web.pages.dev"
+    }
+}
+
+--------------------------------------------------------------------
+3. CONTOH IMPLEMENTASI WEB APP (HTML/JS SECARA LOKAL/STATIC):
+--------------------------------------------------------------------
+Untuk membuat prototype/tampilan dashboard, kita dapat membuat 
+halaman web sederhana yang memanfaatkan Telegram WebApp SDK:
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOTMAP Dashboard</title>
+    <!-- Muat Telegram WebApp JS SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 20px;
+        }
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>📊 DASHBOARD PANGKALAN</h2>
+    <div class="card">
+        <h3>SRI LESTARI PRATIWI</h3>
+        <p>🟢 Stok: 108 Tabung</p>
+    </div>
+    <div class="card">
+        <h3>SANTOSO</h3>
+        <p>🟢 Stok: 100 Tabung</p>
+    </div>
+    <button onclick="TutupDashboard()">TUTUP</button>
+
+    <script>
+        // Inisialisasi Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Lebarkan tampilan semaksimal mungkin
+
+        function TutupDashboard() {
+            tg.close();
+        }
+    </script>
+</body>
+</html>
+```
+
+--------------------------------------------------------------------
+4. LANGKAH-LANGKAH PENGEMBANGAN TAHAP 5:
+--------------------------------------------------------------------
+1. **Membuat Halaman Web Dashboard**:
+   Deploy file HTML di atas ke hosting gratis (Github Pages, Vercel, 
+   atau Cloudflare Pages). URL harus bertipe HTTPS.
+   
+2. **Pemasangan Tombol di Menu Utama**:
+   Di file `modules/telegram.py` (pada fungsi `tg_send_menu`), kita bisa 
+   menyisipkan tombol Web App ini ke dalam layout Keyboard Utama:
+   
+   ```python
+   # Contoh tata letak keyboard utama dengan tombol Web App
+   keyboard = {
+       "keyboard": [
+           [{"text": "🚀 PROSES AKUN"}, {"text": "🔑 LOGIN MANUAL"}, {"text": "📊 CEK STOK DATA"}],
+           [{"text": "📥 INPUT AKUN"}, {"text": "🗑️ HAPUS AKUN"}, {"text": "📋 NIK AUTO"}],
+           [{"text": "🤖 AUTO ON"}, {"text": "⏰ CEK DURASI"}, {"text": "💳 PERPANJANG"}],
+           [{"text": "🧹 CLEAR LOG"}, {"text": "📱 DASHBOARD WEB", "web_app": {"url": "https://url-dashboard-anda.com"}}]
+       ],
+       "resize_keyboard": True
+   }
+   ```
+
+3. **Komunikasi Data (Opsional)**:
+   Telegram Web App dapat mengirim data kembali ke bot dengan memanggil 
+   `tg.sendData("pesan dari web app")`. Data ini akan masuk ke bot 
+   sebagai update bertipe `message.web_app_data`.
+
+====================================================================

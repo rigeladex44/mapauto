@@ -1,0 +1,70 @@
+====================================================================
+           RENCANA 5 FITUR UI/UX MODERN TELEGRAM BOT
+                         BOTMAPV6
+====================================================================
+
+Dokumen ini berisi rencana eksekusi lengkap untuk 5 fitur peningkatan
+tampilan (UI) dan pengalaman pengguna (UX) pada BOTMAPV6 dengan
+memanfaatkan keunggulan Telegram Bot API terbaru.
+
+--------------------------------------------------------------------
+TAHAP 1: Telegram Live Chat Action Signals (sendChatAction)
+--------------------------------------------------------------------
+- Menampilkan indikator status animasi di baris atas Telegram 
+  ("BOT MAP 1 is typing..." / "BOT MAP 1 is scanning...") saat bot sedang:
+    * Membuka Playwright browser
+    * Menjalankan login manual (Email & PIN)
+    * Mengurai Jigsaw Captcha
+    * Memindai stok real-time dari dashboard
+- Manfaat UX: Pengguna langsung mengetahui bot sedang bekerja aktif
+  dan room chat tidak terasa menggantung.
+
+--------------------------------------------------------------------
+TAHAP 2: Floating Toast Notifications (answerCallbackQuery)
+--------------------------------------------------------------------
+- Menampilkan pesan notifikasi melayang (Toast Alert) di bagian atas 
+  layar HP pengguna secara instan begitu tombol Inline ditekan
+  (seperti toggle RT SAJA, RT & UMKM, Reset Cookie, Batal, dll).
+- Manfaat UX: Memberikan konfirmasi visual seketika tanpa perlu 
+  mengirim pesan teks baru yang mengotori isi room chat.
+
+--------------------------------------------------------------------
+TAHAP 3: Dynamic Live Progress Card (Single Status Live Edit)
+--------------------------------------------------------------------
+- Selama transaksi berjalan, bot mengedit 1 kartu pesan status utama
+  secara live (Live Edit) daripada mengirim 5-10 pesan teks baru.
+- Contoh alur tampilan:
+    [1/3] ⏳ Membuka Playwright & Login ke Pertamina...
+    [2/3] 🔐 Mengurai Jigsaw Captcha (Attempt 1)...
+    [3/3] 💳 Menjalankan Checkout NIK 3507...
+    ✅ BERHASIL! (Sisa stok: 108 Tabung)
+
+--------------------------------------------------------------------
+TAHAP 4: Penataan Keyboard Simetris & Premium (3-3-3-1 Grid)
+--------------------------------------------------------------------
+- Menata ulang tombol keyboard utama agar simetris, rapi, dan mudah 
+  ditekan dengan ikon emoji kontras tinggi:
+
+  [ 🚀 PROSES AKUN ]   [ 🔑 LOGIN MANUAL ]   [ 📊 CEK STOK LIVE ]
+  [ 📥 INPUT AKUN ]    [ 🗑️ HAPUS AKUN ]     [ 📋 KELOLA NIK AUTO ]
+  [ 🤖 AUTO-MODE ]     [ ⏰ CEK DURASI ]     [ 💳 PERPANJANG ]
+                       [ 🧹 CLEAR LOG ]
+
+--------------------------------------------------------------------
+TAHAP 5: Telegram Mini App / WebApp Concept (📱 DASHBOARD WEB)
+--------------------------------------------------------------------
+- Menyiapkan integrasi tombol Telegram WebApp modern yang saat di-tap
+  akan membuka Mini App interaktif langsung di dalam aplikasi Telegram
+  tanpa keluar ke browser eksternal.
+- Mini App dapat menampilkan visual grafik stok, daftar akun, dan 
+  kelola NIK dengan mudah.
+
+====================================================================
+                   URUTAN PENGERJAAN STEP-BY-STEP
+====================================================================
+Kita akan mengerjakan dan menguji fitur-fitur di atas satu per satu:
+1. Tahap 1 & 2: Chat Action (typing...) & Toast Alerts Melayang.
+2. Tahap 3: Dynamic Live Progress Card.
+3. Tahap 4: Merapikan Keyboard Grid 3-3-3-1.
+4. Tahap 5: Telegram Mini App WebApp Concept.
+====================================================================

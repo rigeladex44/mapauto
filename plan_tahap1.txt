@@ -1,0 +1,74 @@
+====================================================================
+               PLAN TAHAP 1 — LIVE SINGLE STATUS CARD
+                   (RESPON TUNGGAL DITIMPA LIVE)
+====================================================================
+
+DOKUMEN INI UNTUK PANDUAN IMPLEMENTASI REVISI RESPON TELEGRAM BOT.
+
+--------------------------------------------------------------------
+1. MASALAH SAAT INI (WHAT NEEDS FIXING):
+--------------------------------------------------------------------
+Saat pengguna menekan tombol "CEK STOK DATA":
+- Bot mengirim 3-4 pesan terpisah yang menumpuk di room chat:
+  (1) "📦 Memulai cek stok semua akun..."
+  (2) "🔍 Scanning stok 9 akun..."
+  (3) "📊 SCAN STOK:"
+- Atau pesan langsung melompat ke 100% tanpa memperlihatkan proses 
+  scan akun per akun (0% ➔ 10% ➔ 20% ... ➔ 100%).
+
+--------------------------------------------------------------------
+2. KEINGINAN USER (EXACT USER REQUIREMENT):
+--------------------------------------------------------------------
+Respon bot TIDAK BOLEH NUMPUK. Murni hanya menggunakan 1 PESAN TUNGGAL
+yang DITIMPA / DI-EDIT LIVE (editMessageText) selama proses berlangsung.
+
+A. Tahap Awal (Saat Tombol Ditekan):
+   Bot mengirim 1 pesan awal:
+   
+   🔍 Scanning stok 9 akun... (Mempersiapkan browser...)
+   [░░░░░░░░░░] 0% ⚡ (0/9 Akun)
+
+B. Tahap Berjalan (Proses Scanning Akun demi Akun):
+   Pesan yang SAMA di-edit live per akun yang selesai di-scan:
+
+   📊 SCAN STOK REAL-TIME
+   ━━━━━━━━━━━━━━━━━
+   [█████░░░░░] 50% ⚡ (4/9 Akun)
+
+   ⚡ Scanning: SRI LESTARI...
+
+   1. 🟢 SRI LESTARI: 110 Tabung
+   2. 🟢 RIATI: 80 Tabung
+   3. ⬜ HARTATIK: Kosong
+
+C. Tahap Akhir (Selesai Scan 100%):
+   Pesan yang SAMA di-edit menjadi hasil akhir:
+
+   📊 SCAN STOK SELESAI
+   ━━━━━━━━━━━━━━━━━
+   [██████████] 100% 🔋 (9/9 Akun SELESAI)
+
+   1. 🟢 SRI LESTARI: 110 Tabung
+   2. 🟢 RIATI: 80 Tabung
+   3. 🟢 RIYANTO: 50 Tabung
+   4. ⬜ HARTATIK: Kosong
+
+--------------------------------------------------------------------
+3. INSTRUKSI TEKNIS IMPLEMENTASI:
+--------------------------------------------------------------------
+1. Di file `BOT1_CAPTCHA.py` (pada handler tombol "CEK STOK DATA"):
+   - JANGAN panggil `tg_send_menu` pesan statis pembuka.
+   - Langsung jalankan `run_cek_stok_data(session)` di thread terpisah.
+
+2. Di file `modules/auto_transaction.py` (fungsi `scan_stok_semua_akun`):
+   - Di baris pertama fungsi, reset `session.stop_requested = False`.
+   - Ambil `msg_id = tg_send(...)` HANYA 1 KALI di awal.
+   - Di dalam loop Playwright per akun, gunakan `tg_edit_message(chat_id, msg_id, text)`
+     untuk meng-edit pesan awal tersebut setiap kali 1 akun selesai.
+   - JANGAN ada panggilan `tg_send` tambahan di dalam atau di akhir loop.
+
+3. Di file `modules/telegram.py`:
+   - Pastikan `tg_edit_message(chat_id, message_id, text, parse_mode="HTML")`
+     dan `make_progress_bar(current, total)` dapat di-import dengan benar.
+
+====================================================================

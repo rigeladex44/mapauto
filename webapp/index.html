@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>BOTMAP — Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: var(--tg-theme-bg-color, #0f1117);
+            --bg2: var(--tg-theme-secondary-bg-color, #1a1d27);
+            --text: var(--tg-theme-text-color, #f0f0f0);
+            --hint: var(--tg-theme-hint-color, #8a8fa8);
+            --btn: var(--tg-theme-button-color, #2f80ed);
+            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --accent: #2f80ed;
+            --green: #27ae60;
+            --red: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+        }
+
+        .header-icon {
+            font-size: 28px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: var(--hint);
+            margin-top: 2px;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--bg2);
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        .summary-card .num {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .summary-card .label {
+            font-size: 11px;
+            color: var(--hint);
+            margin-top: 2px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--hint);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+        }
+
+        .account-card {
+            background: var(--bg2);
+            border-radius: 14px;
+            padding: 13px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .dot-green {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+        }
+
+        .dot-red {
+            background: rgba(128, 128, 128, 0.3);
+        }
+
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-bg {
+            height: 3px;
+            background: rgba(128, 128, 128, 0.15);
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--green));
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .stok {
+            font-size: 15px;
+            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .stok-available {
+            color: var(--green);
+        }
+
+        .stok-empty {
+            color: var(--hint);
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--hint);
+        }
+
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .badge-live {
+            background: rgba(39, 174, 96, 0.15);
+            color: var(--green);
+        }
+
+        .badge-demo {
+            background: rgba(255, 165, 0, 0.15);
+            color: orange;
+        }
+
+        .btn {
+            background: var(--btn);
+            color: var(--btn-text);
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        .footer {
+            font-size: 11px;
+            color: var(--hint);
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-icon">📊</div>
+        <div>
+            <h1>BOTMAP Dashboard</h1>
+            <p id="lastSync">Memuat data...</p>
+        </div>
+    </div>
+
+    <div id="badge"></div>
+
+    <div class="summary-row">
+        <div class="summary-card">
+            <div class="num" id="totalAkun">-</div>
+            <div class="label">Total Akun</div>
+        </div>
+        <div class="summary-card">
+            <div class="num" id="totalStok">-</div>
+            <div class="label">Total Stok</div>
+        </div>
+        <div class="summary-card">
+            <div class="num" id="aktiAkun">-</div>
+            <div class="label">Ada Stok</div>
+        </div>
+    </div>
+
+    <div class="section-title">Daftar Akun Pangkalan</div>
+    <div id="accountList"></div>
+
+    <button class="btn" onclick="tg.close()">✕ Tutup Dashboard</button>
+    <div class="footer" id="footer"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        if (tg.colorScheme === 'light') {
+            document.documentElement.style.setProperty('--bg', '#ffffff');
+            document.documentElement.style.setProperty('--bg2', '#f2f2f7');
+            document.documentElement.style.setProperty('--text', '#000000');
+            document.documentElement.style.setProperty('--hint', '#6b7280');
+        }
+
+        const DUMMY_DATA = [
+            { name: "SRI LESTARI PRATIWI", stok: 108 },
+            { name: "HARTATIK", stok: 100 },
+            { name: "UTOMO ABDILAH", stok: 95 },
+            { name: "SANTOSO", stok: 94 },
+            { name: "ELVINA FIDELA", stok: 80 },
+            { name: "BUDI YOHANES", stok: 54 },
+            { name: "SUPRAYITNO", stok: 50 },
+            { name: "SISILIA RIRIN RATNAWATI", stok: 0 },
+            { name: "PURWANTI", stok: 0 },
+        ];
+
+        function render(data, isLive) {
+            const sorted = [...data].sort((a, b) => b.stok - a.stok);
+            const maxStok = Math.max(...sorted.map(a => a.stok), 1);
+            const totalStok = sorted.reduce((s, a) => s + a.stok, 0);
+            const aktif = sorted.filter(a => a.stok > 0).length;
+
+            document.getElementById('totalAkun').textContent = sorted.length;
+            document.getElementById('totalStok').textContent = totalStok;
+            document.getElementById('aktiAkun').textContent = aktif;
+
+            const now = new Date();
+            document.getElementById('lastSync').textContent = isLive
+                ? `🟢 Live — ${now.toLocaleTimeString('id-ID')}`
+                : `⚠️ Data belum disinkron`;
+
+            document.getElementById('badge').innerHTML = isLive
+                ? `<span class="badge badge-live">✅ Data Real-Time</span>`
+                : `<span class="badge badge-demo">⚠️ Tampilan Contoh — tekan CEK STOK DATA di bot</span>`;
+
+            document.getElementById('footer').textContent = isLive
+                ? `Data dari scan Playwright terakhir`
+                : `Isi ulang data dengan menekan CEK STOK DATA`;
+
+            const list = document.getElementById('accountList');
+            if (sorted.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Belum ada data</p></div>`;
+                return;
+            }
+
+            list.innerHTML = sorted.map((acc, i) => {
+                const pct = Math.round((acc.stok / maxStok) * 100);
+                const dotClass = acc.stok > 0 ? 'dot-green' : 'dot-red';
+                const stokHtml = acc.stok > 0
+                    ? `<div class="stok stok-available">${acc.stok}<span style="font-size:10px;font-weight:400"> Tbg</span></div>`
+                    : `<div class="stok stok-empty">Kosong</div>`;
+                return `<div class="account-card">
+                    <div class="dot ${dotClass}"></div>
+                    <div class="info">
+                        <div class="name">${i + 1}. ${acc.name}</div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+                    </div>
+                    ${stokHtml}
+                </div>`;
+            }).join('');
+        }
+
+        // Coba ambil data.json yang ditulis bot setelah scan
+        fetch('data.json?t=' + Date.now())
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(data => render(Array.isArray(data) && data.length > 0 ? data : DUMMY_DATA, data.length > 0))
+            .catch(() => render(DUMMY_DATA, false));
+    </script>
+</body>
+
+</html>
