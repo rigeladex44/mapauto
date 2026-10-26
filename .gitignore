@@ -1,0 +1,16 @@
+# Runtime credentials, customer data and browser sessions
+*.env
+.env*
+!.env.example
+!*.env.example
+user_data/
+semiauto/akun.txt
+semiauto/nik.txt
+semiauto/cookies/
+semiauto/riwayat/
+__pycache__/
+*.py[cod]
+.venv/
+portal/runtime/
+*.log
+.DS_Store
